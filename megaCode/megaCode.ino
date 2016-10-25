@@ -18,6 +18,7 @@ String inputString3 = "";
 String inputString2 = "";
 char RecvPayload[31] = "";
 char serialBuffer[31] = "";
+char SendPayload[31] = "";
 
 String recvString = "";
 
@@ -52,7 +53,6 @@ bool stringComplete2 = false;
 float    magneticX, magneticY, magneticZ;
 float    headingAngle;
 char     orientation;
-
 
 
 void setup(void) {
@@ -153,6 +153,10 @@ void nRF_receive(void) {
 
     recvString = "";
     RecvPayload[0] = 0;  // Clear the buffers
+    for(int i =0; i<=31;i++){
+      RecvPayload[i] = 0;
+    }
+    RecvPayload[0] = 0;  // Clear the buffers
   }  
 }
 
@@ -160,13 +164,16 @@ void serial_receive(void){
   
   if (stringComplete2) { 
         // swap TX & Rx addr for writing
+        inputString2.toCharArray(SendPayload,31);
         radio.openWritingPipe(pipes[1]);
         radio.openReadingPipe(0,pipes[0]);  
         radio.stopListening();
-        radio.write(inputString2.c_str(),inputString2.length());
+       // radio.write(inputString2.c_str(),inputString2.length());
+        radio.write(&SendPayload,strlen(SendPayload));
         
         Serial.print("S:");  
-        Serial.print(inputString2);          
+        //Serial.print(inputString2);
+        Serial.println(SendPayload);          
         Serial.println();
         stringComplete2 = false;
        
@@ -181,6 +188,7 @@ void serial_receive(void){
 
     if (stringComplete3) { 
         // swap TX & Rx addr for writing
+        
         radio.openWritingPipe(pipes[1]);
         radio.openReadingPipe(0,pipes[0]);  
         radio.stopListening();
