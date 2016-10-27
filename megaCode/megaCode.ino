@@ -44,16 +44,20 @@ bool stringComplete2 = false;
         0xE0        |       230      |  +/- 8.1 
    ******************************************************/
    
-#define frontAngle         140
-#define rightAngle         62
-#define backAngle          332
-#define leftAngle          229
+#define frontAngle         56
+#define rightAngle         328
+#define backAngle          238
+#define leftAngle          147
 #define Error              8
 
 float    magneticX, magneticY, magneticZ;
 float    headingAngle;
+float    errorHeading;
+uint8_t  newHeading, prevHeading;
 char     orientation;
 
+unsigned long previousMillis = 0;
+const int interval = 10;
 
 void setup(void) {
   
@@ -87,13 +91,43 @@ void setup(void) {
   inputString3.reserve(100);
   inputString2.reserve(100);
   recvString.reserve(100);
+
+ /* prevHeading = frontAngle;
+  newHeading = leftAngle;*/
+  //TOD: add setpoint later 
 }
 
+boolean rotateActive = false;
+
 void loop(void) {
-  
+if (rotateActive){
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
   readData();
-  findHeadingAngle();
+  findONLYAngle();
+  //Serial3.print("H,");
+  //Serial3.println(headingAngle);
   
+  if((prevHeading - newHeading) <= 150){
+    errorHeading = abs(headingAngle - prevHeading);
+  }
+  else if((prevHeading - newHeading) >= 150){
+    if( abs(headingAngle - prevHeading) >= 250){
+      errorHeading = 360 - abs(headingAngle - prevHeading);
+    }
+    else
+      errorHeading = abs(headingAngle - prevHeading);
+  }
+  Serial3.print("H,");
+  Serial3.print(headingAngle);
+  Serial3.print(",");
+  Serial3.println(errorHeading);
+  //Serial.print(headingAngle);
+  //Serial.print(",");
+  //Serial.println(errorHeading);
+  }
+}
   nRF_receive();
   serial_receive();
   
@@ -141,8 +175,50 @@ void nRF_receive(void) {
 
     recvString = String(RecvPayload);
     if(recvString.startsWith("M")){
+      if(recvString[2] == 'G'){
+          readData();
+          findHeadingAngle();
+        if(recvString[4] == 'R'){
+          switch (prevHeading){
+            case frontAngle:
+                 newHeading = rightAngle;
+                 break;
+            case rightAngle:
+                 newHeading = backAngle;
+                 break;
+            case backAngle:
+                 newHeading = leftAngle;
+                 break;
+            case leftAngle:
+                 newHeading = frontAngle;
+                 break;
+          }
+        }
+          else if(recvString[4] == 'L'){
+          switch (prevHeading){
+            case frontAngle:
+                 newHeading = leftAngle;
+                 break;
+            case rightAngle:
+                 newHeading = frontAngle;
+                 break;
+            case backAngle:
+                 newHeading = rightAngle;
+                 break;
+            case leftAngle:
+                 newHeading = backAngle;
+                 break;
+          }
+        }
+        rotateActive = true;
+          recvString = recvString.substring(2);
+          Serial3.println(recvString);
+        }
+      else{
+        rotateActive = false;  
       recvString = recvString.substring(2);
       Serial3.println(recvString);
+      }
     }
     else if (recvString.startsWith("S")){
       recvString = "S";
@@ -278,13 +354,32 @@ void findHeadingAngle(){
 
    // For Orientation
    if ( (headingAngle <= frontAngle + Error) && (headingAngle >= frontAngle - Error) )
-           orientation = 'N';
+          { orientation = 'N'; 
+          prevHeading = frontAngle;}
    else if ( (headingAngle <= rightAngle + Error) && (headingAngle >= rightAngle - Error) )
-            orientation = 'E';
+           { orientation = 'E'; 
+           prevHeading = rightAngle;}
    else if ( (headingAngle <= backAngle + Error) && (headingAngle >= backAngle - Error) )
-            orientation = 'S';
+           { orientation = 'S'; 
+           prevHeading = backAngle;}
    else if ( (headingAngle <= leftAngle + Error) && (headingAngle >= leftAngle - Error) )
-            orientation = 'W'; 
+           { orientation = 'W'; 
+           prevHeading = leftAngle;}
    else 
    orientation = 'U';     
 }
+
+void findONLYAngle(){
+  float heading = atan2(magneticY, magneticX);
+
+   // Correct for when signs are reversed.
+   if(heading < 0)
+      heading += 2*PI;
+    
+   if(heading > 2*PI)
+      heading -= 2*PI;
+   
+   // Convert radians to degrees for readability.
+   headingAngle = (heading * 180)/(PI);
+}
+
