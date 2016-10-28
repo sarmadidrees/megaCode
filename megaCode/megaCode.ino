@@ -44,10 +44,10 @@ bool stringComplete2 = false;
         0xE0        |       230      |  +/- 8.1 
    ******************************************************/
    
-#define frontAngle         56
-#define rightAngle         328
-#define backAngle          238
-#define leftAngle          147
+#define frontAngle         133
+#define rightAngle         47
+#define backAngle          320
+#define leftAngle          227
 #define Error              8
 
 float    magneticX, magneticY, magneticZ;
@@ -99,7 +99,14 @@ void setup(void) {
 
 boolean rotateActive = false;
 
+
 void loop(void) {
+
+/*readData();
+  findONLYAngle();
+  Serial.println(headingAngle);
+*/
+
 if (rotateActive){
   unsigned long currentMillis = millis();
   if (currentMillis - previousMillis >= interval) {
