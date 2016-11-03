@@ -63,7 +63,7 @@ const int interval = 10;
 #include "AstarPathFinder.h"
 
 AstarPathFinder Astar = AstarPathFinder();
-
+String command = "";
 
 void setup(void) {
   
@@ -97,7 +97,8 @@ void setup(void) {
   inputString3.reserve(100);
   inputString2.reserve(100);
   recvString.reserve(100);
-
+  command.reserve(100);
+  
  /* prevHeading = frontAngle;
   newHeading = leftAngle;*/
   //TOD: add setpoint later
@@ -115,6 +116,14 @@ void loop(void) {
   findONLYAngle();
   Serial.println(headingAngle);
 */
+
+  if(Astar.pathFound()){
+    //make string of command to send to motorControlBoard
+    makeCommand();
+  //  sendCommand(); 
+  }
+
+
 
 if (rotateActive){
   unsigned long currentMillis = millis();
@@ -236,23 +245,123 @@ void planPath(){
   int eX,eY;
   int c1=1, c2=1; 
 
-  c1 = inputString.indexOf(',')+1;
-  c2 = inputString.indexOf(',',c1);
-  cX = inputString.substring(c1,c2).toInt();
+  c1 = recvString.indexOf(',')+1;
+  c2 = recvString.indexOf(',',c1);
+  cX = recvString.substring(c1,c2).toInt();
   
   c1 = c2+1;
-  c2 = inputString.indexOf(',',c1);
-  cY = inputString.substring(c1,c2).toInt();
+  c2 = recvString.indexOf(',',c1);
+  cY = recvString.substring(c1,c2).toInt();
   
   c1 = c2+1;
-  c2 = inputString.indexOf(',',c1);
-  eX = inputString.substring(c1,c2).toInt();
+  c2 = recvString.indexOf(',',c1);
+  eX = recvString.substring(c1,c2).toInt();
   
   c1 = c2+1;
-  eY = inputString.substring(c1).toInt();
+  eY = recvString.substring(c1).toInt();
 
   Astar.Flush();
   Astar.findPath(cX,cY,eX,eY);
+}
+
+int counti = 0;
+char expectOrien;
+
+
+void makeCommand(){
+    switch (orientation){
+      case 'N':
+        if(Astar.finalPath[counti].Y == Astar.finalPath[counti + 1].Y){
+          if((Astar.finalPath[counti].X + 1) == Astar.finalPath[counti + 1].X){
+            command = "C,X\n";
+            expectOrien = 'N';
+          }
+          else if((Astar.finalPath[counti].X - 1) == Astar.finalPath[counti + 1].X){
+            command = "C,L2\n";
+            expectOrien = 'S';
+          }
+        }
+        else if(Astar.finalPath[counti].X == Astar.finalPath[counti + 1].X){
+            if((Astar.finalPath[counti].Y + 1) == Astar.finalPath[counti + 1].Y){
+              command = "C,R1\n";
+              expectOrien = 'E';
+            }
+            else if((Astar.finalPath[counti].Y - 1) == Astar.finalPath[counti + 1].Y){
+              command = "C,L1\n";
+              expectOrien = 'W';
+            }
+        }
+      break;
+
+      case 'E':
+        if(Astar.finalPath[counti].Y == Astar.finalPath[counti + 1].Y){
+          if((Astar.finalPath[counti].X + 1) == Astar.finalPath[counti + 1].X){
+            command = "C,L1\n";
+            expectOrien = 'N';
+          }
+          else if((Astar.finalPath[counti].X - 1) == Astar.finalPath[counti + 1].X){
+            command = "C,R1\n";
+            expectOrien = 'S';
+          }
+        }
+        else if(Astar.finalPath[counti].X == Astar.finalPath[counti + 1].X){
+            if((Astar.finalPath[counti].Y + 1) == Astar.finalPath[counti + 1].Y){
+              command = "C,X\n";
+              expectOrien = 'E';
+            }
+            else if((Astar.finalPath[counti].Y - 1) == Astar.finalPath[counti + 1].Y){
+              command = "C,L2\n";
+              expectOrien = 'W';
+            }
+        }
+      break;
+
+      case 'S':
+        if(Astar.finalPath[counti].Y == Astar.finalPath[counti + 1].Y){
+          if((Astar.finalPath[counti].X + 1) == Astar.finalPath[counti + 1].X){
+            command = "C,L2\n";
+            expectOrien = 'N';
+          }
+          else if((Astar.finalPath[counti].X - 1) == Astar.finalPath[counti + 1].X){
+            command = "C,X\n";
+            expectOrien = 'S';
+          }
+        }
+        else if(Astar.finalPath[counti].X == Astar.finalPath[counti + 1].X){
+            if((Astar.finalPath[counti].Y + 1) == Astar.finalPath[counti + 1].Y){
+              command = "C,L1\n";
+              expectOrien = 'E';
+            }
+            else if((Astar.finalPath[counti].Y - 1) == Astar.finalPath[counti + 1].Y){
+              command = "C,R1\n";
+              expectOrien = 'W';
+            }
+        }
+      break;
+
+      case 'W':
+        if(Astar.finalPath[counti].Y == Astar.finalPath[counti + 1].Y){
+          if((Astar.finalPath[counti].X + 1) == Astar.finalPath[counti + 1].X){
+            command = "C,R1\n";
+            expectOrien = 'N';
+          }
+          else if((Astar.finalPath[counti].X - 1) == Astar.finalPath[counti + 1].X){
+            command = "C,L1\n";
+            expectOrien = 'S';
+          }
+        }
+        else if(Astar.finalPath[counti].X == Astar.finalPath[counti + 1].X){
+            if((Astar.finalPath[counti].Y + 1) == Astar.finalPath[counti + 1].Y){
+              command = "C,L2\n";
+              expectOrien = 'E';
+            }
+            else if((Astar.finalPath[counti].Y - 1) == Astar.finalPath[counti + 1].Y){
+              command = "C,X\n";
+              expectOrien = 'W';
+            }
+        }
+      break;
+    }
 }
 
 void serial_receive(void){

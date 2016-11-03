@@ -55,6 +55,7 @@ AstarPathFinder::AstarPathFinder(){
 void AstarPathFinder::initNodes(){
 
 	AstarPathFinder::Flush();
+ _pathFound = false;
 }
 
 void AstarPathFinder::obstacle(int x, int y, bool walkable){
@@ -160,7 +161,7 @@ void AstarPathFinder::findPath(int startY, int startX, int endY, int endX){
 	    }
 
 	    //if path is not found correctly then it should terminate the procedure
-	    if ((prevX == currentX) && (prevY == currentY)){
+	    if ((prevX == _currentX) && (prevY == _currentY)){
         	sameCount++;
 
         	if (sameCount >= 5) {
@@ -180,7 +181,7 @@ void AstarPathFinder::findPath(int startY, int startX, int endY, int endX){
     	prevY = _currentY;
 	}
   
-	_currentX = _endX;
+	  _currentX = _endX;
     _currentY = _endY;
 
     _count = 0;
