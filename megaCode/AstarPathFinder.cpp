@@ -56,6 +56,7 @@ void AstarPathFinder::initNodes(){
 
 	AstarPathFinder::Flush();
  _pathFound = false;
+ _stepCount = 0;
 }
 
 void AstarPathFinder::obstacle(int x, int y, bool walkable){

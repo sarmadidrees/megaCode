@@ -63,7 +63,12 @@ const int interval = 10;
 #include "AstarPathFinder.h"
 
 AstarPathFinder Astar = AstarPathFinder();
+
 String command = "";
+int counti = 0;
+char expectOrien;
+bool followPath = false;
+bool doneMotor = false;
 
 void setup(void) {
   
@@ -117,12 +122,35 @@ void loop(void) {
   Serial.println(headingAngle);
 */
 
+if(followPath){
   if(Astar.pathFound()){
-    //make string of command to send to motorControlBoard
-    makeCommand();
-  //  sendCommand(); 
+    if (doneMotor){
+      if(Astar.stepCount()>counti){
+        readData();
+        findHeadingAngle();
+        
+        if (orientation == expectOrien){
+          makeCommand();
+          sendCommand();
+          counti++;
+          doneMotor = false;
+        }
+      }
+      else{
+        followPath = false;
+        doneMotor = false;
+        counti = 0;
+      }
+    }
+    else {
+        sendCommand();
+        doneMotor = false;
+      }
   }
-
+  else{
+    //get notification when path is not found correctly
+  }
+}
 
 
 if (rotateActive){
@@ -264,9 +292,6 @@ void planPath(){
   Astar.findPath(cX,cY,eX,eY);
 }
 
-int counti = 0;
-char expectOrien;
-
 
 void makeCommand(){
     switch (orientation){
@@ -362,6 +387,10 @@ void makeCommand(){
         }
       break;
     }
+}
+
+void sendCommand(){
+  Serial3.print(command);
 }
 
 void serial_receive(void){
