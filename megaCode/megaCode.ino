@@ -45,14 +45,14 @@ bool stringComplete2 = false;
    ******************************************************/
    
 #define frontAngle         135
-#define rightAngle         49
-#define backAngle          322
-#define leftAngle          229
-#define Error              20       //error is changed for ROTATE (please change it for localization)
+#define rightAngle         50
+#define backAngle          323
+#define leftAngle          230
+#define Error              35       //error is changed for ROTATE (please change it for localization)
 
 float    magneticX, magneticY, magneticZ;
 float    headingAngle;
-uint8_t  SetpointHeading;
+float  SetpointHeading;
 char     orientation;
 
 unsigned long previousMillis = 0;
@@ -112,15 +112,16 @@ if (rotateActive){
   if (currentMillis - previousMillis >= interval) {
     previousMillis = currentMillis;
     readData();
-    findONLYAngle();
+    findHeadingAngle();
 
   Serial3.print("H,");
   Serial3.print(headingAngle);
   Serial3.print(",");
   Serial3.println(SetpointHeading);
-  //Serial.print(headingAngle);
-  //Serial.print(",");
-  //Serial.println(errorHeading);
+  
+//  Serial.print(headingAngle);
+//  Serial.print(",");
+//  Serial.println(SetpointHeading);
   }
 }
   nRF_receive();
