@@ -52,11 +52,18 @@ bool stringComplete2 = false;
 
 float    magneticX, magneticY, magneticZ;
 float    headingAngle;
-float  SetpointHeading;
+float    SetpointHeading;
 char     orientation;
 
 unsigned long previousMillis = 0;
 const int interval = 10;
+
+/********************************/
+// For path finding 
+#include "AstarPathFinder.h"
+
+AstarPathFinder Astar = AstarPathFinder();
+
 
 void setup(void) {
   
@@ -93,7 +100,9 @@ void setup(void) {
 
  /* prevHeading = frontAngle;
   newHeading = leftAngle;*/
-  //TOD: add setpoint later 
+  //TOD: add setpoint later
+
+  Astar.initNodes();    //initializing A* path finding
 }
 
 boolean rotateActive = false;
@@ -129,6 +138,7 @@ if (rotateActive){
   
 } // end loop()
 
+/*CUSTOM functions*/
 void serialEvent3() {
   while (Serial3.available() > 0 ) {
       char inChar = (char)Serial3.read();
@@ -138,8 +148,8 @@ void serialEvent3() {
       if(inChar == '\n'){
         stringComplete3 = true;
       }
-  } // end while()
-} // end serialEvent()
+  }
+}
 
 void serialEvent2() {
   while (Serial2.available() > 0 ) {
@@ -150,9 +160,16 @@ void serialEvent2() {
       if(inChar == '\n'){
         stringComplete2 = true;
       }
-  } // end while()
-} // end serialEvent()
+  }
+}
 
+void interperetMotorSerial(){
+  
+}
+
+void interperetSonarSerial(){
+  
+}
 
 void nRF_receive(void) {
   int len = 0;
@@ -170,7 +187,19 @@ void nRF_receive(void) {
     Serial.println(RecvPayload);
 
     recvString = String(RecvPayload);
-    if(recvString.startsWith("M")){
+   
+    if(recvString.startsWith("PATH")){
+      //Command: PATH,currentX,currentY,endX,endY   //wrt actual plan
+      recvString = recvString.substring(5);
+      planPath();
+    }
+   
+   
+   
+   
+   
+   
+   /* if(recvString.startsWith("M")){
       if(recvString[2] == 'G'){
           readData();
           findHeadingAngle();
@@ -191,7 +220,7 @@ void nRF_receive(void) {
       recvString += orientation; 
       Serial2.println(recvString);
     }
-
+    */
     recvString = "";
     RecvPayload[0] = 0;  // Clear the buffers
     for(int i =0; i<=31;i++){
@@ -199,6 +228,31 @@ void nRF_receive(void) {
     }
     RecvPayload[0] = 0;  // Clear the buffers
   }  
+}
+
+void planPath(){
+  //Command: PATH,currentX,currentY,endX,endY   //wrt actual plan
+  int cX,cY;
+  int eX,eY;
+  int c1=1, c2=1; 
+
+  c1 = inputString.indexOf(',')+1;
+  c2 = inputString.indexOf(',',c1);
+  cX = inputString.substring(c1,c2).toInt();
+  
+  c1 = c2+1;
+  c2 = inputString.indexOf(',',c1);
+  cY = inputString.substring(c1,c2).toInt();
+  
+  c1 = c2+1;
+  c2 = inputString.indexOf(',',c1);
+  eX = inputString.substring(c1,c2).toInt();
+  
+  c1 = c2+1;
+  eY = inputString.substring(c1).toInt();
+
+  Astar.Flush();
+  Astar.findPath(cX,cY,eX,eY);
 }
 
 void serial_receive(void){

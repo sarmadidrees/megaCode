@@ -54,7 +54,7 @@ AstarPathFinder::AstarPathFinder(){
 
 void AstarPathFinder::initNodes(){
 
-	AstarPathFinder::flush();
+	AstarPathFinder::Flush();
 }
 
 void AstarPathFinder::obstacle(int x, int y, bool walkable){
@@ -72,7 +72,7 @@ void AstarPathFinder::obstacle(int x, int y, bool walkable){
 
 }
 
-void AstarPathFinder::findPath(int startX, int startY, int endX, int endY){
+void AstarPathFinder::findPath(int startY, int startX, int endY, int endX){
   	
 	int prevX = -1; 
 	int prevY = -1;
@@ -244,7 +244,7 @@ bool AstarPathFinder::pathFound(){
 	return _pathFound;
 }
 
-void AstarPathFinder::flush(){
+void AstarPathFinder::Flush(){
 
 	//make all values to zero
 	for (int x=0; x<(mapX+extraX); x++){

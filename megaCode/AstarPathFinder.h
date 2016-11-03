@@ -31,10 +31,10 @@ public:
 	AstarPathFinder();
 	void initNodes();		//initialize node
 	void obstacle(int x, int y, bool walkable); 	//to add obstacle (true = is Walkable, false = not Walkable) 
-	void findPath(int startX, int startY, int endX, int endY);			// to find path and store it into global struct "finalPath"
+	void findPath(int startY, int startX, int endY, int endX);			// to find path and store it into global struct "finalPath"
   	unsigned int stepCount();			//to find steps to reach final goal point
   	bool pathFound();		//to check whether the path is found correctly or not
-  	void flush();		//to reset all values
+  	void Flush();		//to reset all values
   	
 	struct newPATH{
 	    uint8_t X;	
