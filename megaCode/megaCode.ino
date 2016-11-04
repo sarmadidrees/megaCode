@@ -125,7 +125,8 @@ void loop(void) {
   Serial.println(headingAngle);
 */
 
-unsigned long cM = millis(); 
+//unsigned long cM = millis(); 
+
 if(followPath){
   if(Astar.pathFound()){
       if (doneRotate){
@@ -161,7 +162,7 @@ if(followPath){
             doneRotate = false;
           }
         }
-      }
+      
   }
   else{
     //get notification when path is not found correctly
@@ -248,12 +249,7 @@ void nRF_receive(void) {
       //TODO: bool wala stuff k kis ko TRUE karna ha aur kis ko FALSE
     }
    
-   
-   
-   
-   
-   
-   /* if(recvString.startsWith("M")){
+ if(recvString.startsWith("M")){
       if(recvString[2] == 'G'){
           readData();
           findHeadingAngle();
@@ -274,7 +270,7 @@ void nRF_receive(void) {
       recvString += orientation; 
       Serial2.println(recvString);
     }
-    */
+
     recvString = "";
     RecvPayload[0] = 0;  // Clear the buffers
     for(int i =0; i<=31;i++){
@@ -416,11 +412,13 @@ void makeCommand(){
 
 void sendCommand(){
   Serial3.print(command);
+  Serial.print(command);
 }
 
 void sendStraightCommand(){
   //bool wait = true;   //make this "wait" false when straightDone is recieved from MotorBoard
   Serial3.print("C,S\n");
+  Serial.print("C,S\n");
 }
 
 void serial_receive(void){
@@ -461,8 +459,10 @@ void serial_receive(void){
         Serial.print(inputString3);          
         Serial.println();
 
-        if(inputString3.startsWith("START")) rotateActive =true;
+        if(inputString3.startsWith("START")) rotateActive = true;
         else if(inputString3.startsWith("STOP")) rotateActive = false;
+        else if (inputString3.startsWith("STRAIGHT")) doneStraight = true;
+        else if (inputString3.startsWith("ROTATE")) doneRotate = true;
         
         stringComplete3 = false;
        
