@@ -134,8 +134,6 @@ if(followPath){
           
           if (orientation == expectOrien){
             if(Astar.stepCount()>counti){
-              //TODO: is jaga aye k front sonar pe kuch hai ya nahi?
-              //if(noObstacle){
               if(doneStraight){
                 makeCommand();
                 sendCommand();
@@ -144,10 +142,12 @@ if(followPath){
                 doneStraight = false;
               }
               else if (!doneStraight){
+                //TODO: is jaga aye k front sonar pe kuch hai ya nahi?
+                //if(noObstacle){
                 //if(wiat is not ON)
                 sendStraightCommand();
+                //else if (obstacle){ tell that there is obstacle and wait for command }
               }
-              //else if (obstacle){ tell that there is obstacle and wait for command }
             }
             else{
               followPath = false;
@@ -245,6 +245,7 @@ void nRF_receive(void) {
       //Command: PATH,currentX,currentY,endX,endY   //wrt actual plan
       recvString = recvString.substring(5);
       planPath();
+      //TODO: bool wala stuff k kis ko TRUE karna ha aur kis ko FALSE
     }
    
    
@@ -306,6 +307,14 @@ void planPath(){
 
   Astar.Flush();
   Astar.findPath(cX,cY,eX,eY);
+
+  followPath = true;
+  doneRotate = true;
+  doneStraight = true;
+
+  readData();
+  findHeadingAngle();
+  expectOrien = orientation;
 }
 
 
