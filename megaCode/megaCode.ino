@@ -67,10 +67,12 @@ AstarPathFinder Astar = AstarPathFinder();
 String command = "";
 int counti = 0;
 char expectOrien;
-bool followPath = false;
-bool doneRotate = false;
-bool doneStraight = false;
+boolean followPath = false;
+boolean doneRotate = false;
+boolean doneStraight = false;
 unsigned long pM = 0; //previous millis 
+
+boolean rotateActive = false;
 
 void setup(void) {
   
@@ -113,7 +115,6 @@ void setup(void) {
   Astar.initNodes();    //initializing A* path finding
 }
 
-boolean rotateActive = false;
 
 
 void loop(void) {
@@ -127,14 +128,14 @@ void loop(void) {
 unsigned long cM = millis(); 
 if(followPath){
   if(Astar.pathFound()){
-    if(cM - pM >= 5000){
-      pM = cM;
       if (doneRotate){
           readData();
           findHeadingAngle();
           
           if (orientation == expectOrien){
             if(Astar.stepCount()>counti){
+              //TODO: is jaga aye k front sonar pe kuch hai ya nahi?
+              //if(noObstacle){
               if(doneStraight){
                 makeCommand();
                 sendCommand();
@@ -143,8 +144,10 @@ if(followPath){
                 doneStraight = false;
               }
               else if (!doneStraight){
+                //if(wiat is not ON)
                 sendStraightCommand();
               }
+              //else if (obstacle){ tell that there is obstacle and wait for command }
             }
             else{
               followPath = false;
@@ -404,6 +407,11 @@ void makeCommand(){
 
 void sendCommand(){
   Serial3.print(command);
+}
+
+void sendStraightCommand(){
+  //bool wait = true;   //make this "wait" false when straightDone is recieved from MotorBoard
+  Serial3.print("C,S\n");
 }
 
 void serial_receive(void){
