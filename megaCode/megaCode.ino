@@ -68,7 +68,9 @@ String command = "";
 int counti = 0;
 char expectOrien;
 bool followPath = false;
-bool doneMotor = false;
+bool doneRotate = false;
+bool doneStraight = false;
+unsigned long pM = 0; //previous millis 
 
 void setup(void) {
   
@@ -122,29 +124,40 @@ void loop(void) {
   Serial.println(headingAngle);
 */
 
+unsigned long cM = millis(); 
 if(followPath){
   if(Astar.pathFound()){
-    if (doneMotor){
-      if(Astar.stepCount()>counti){
-        readData();
-        findHeadingAngle();
-        
-        if (orientation == expectOrien){
-          makeCommand();
-          sendCommand();
-          counti++;
-          doneMotor = false;
+    if(cM - pM >= 5000){
+      pM = cM;
+      if (doneRotate){
+          readData();
+          findHeadingAngle();
+          
+          if (orientation == expectOrien){
+            if(Astar.stepCount()>counti){
+              if(doneStraight){
+                makeCommand();
+                sendCommand();
+                counti++;
+                doneRotate = false;
+                doneStraight = false;
+              }
+              else if (!doneStraight){
+                sendStraightCommand();
+              }
+            }
+            else{
+              followPath = false;
+              doneRotate = false;
+              doneStraight = false;
+              counti = 0;
+            }
+          }
+          else {
+            sendCommand();
+            doneRotate = false;
+          }
         }
-      }
-      else{
-        followPath = false;
-        doneMotor = false;
-        counti = 0;
-      }
-    }
-    else {
-        sendCommand();
-        doneMotor = false;
       }
   }
   else{
