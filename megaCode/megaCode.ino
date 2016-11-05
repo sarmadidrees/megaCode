@@ -249,7 +249,7 @@ void nRF_receive(void) {
       //TODO: bool wala stuff k kis ko TRUE karna ha aur kis ko FALSE
     }
    
- if(recvString.startsWith("M")){
+ else if(recvString.startsWith("M")){
       if(recvString[2] == 'G'){
           readData();
           findHeadingAngle();
@@ -307,7 +307,8 @@ void planPath(){
   followPath = true;
   doneRotate = true;
   doneStraight = true;
-
+  counti = 0;
+  
   readData();
   findHeadingAngle();
   expectOrien = orientation;
