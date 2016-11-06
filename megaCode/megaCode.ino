@@ -45,9 +45,9 @@ bool stringComplete2 = false;
    ******************************************************/
    
 #define frontAngle         135
-#define rightAngle         50
-#define backAngle          323
-#define leftAngle          230
+#define rightAngle         74
+#define backAngle          350
+#define leftAngle          200
 #define Error              35       //error is changed for ROTATE (please change it for localization)
 
 float    magneticX, magneticY, magneticZ;
@@ -73,6 +73,7 @@ boolean doneStraight = false;
 unsigned long pM = 0; //previous millis 
 
 boolean rotateActive = false;
+uint8_t agay = 0;
 
 void setup(void) {
   
@@ -146,7 +147,10 @@ if(followPath){
                 //TODO: is jaga aye k front sonar pe kuch hai ya nahi?
                 //if(noObstacle){
                 //if(wiat is not ON)
+                if(agay == 0){
                 sendStraightCommand();
+                agay = 1;
+                }
                 //else if (obstacle){ tell that there is obstacle and wait for command }
               }
             }
@@ -155,6 +159,7 @@ if(followPath){
               doneRotate = false;
               doneStraight = false;
               counti = 0;
+              agay = 0;
             }
           }
           else {
@@ -244,7 +249,8 @@ void nRF_receive(void) {
    
     if(recvString.startsWith("PATH")){
       //Command: PATH,currentX,currentY,endX,endY   //wrt actual plan
-      recvString = recvString.substring(5);
+      
+     // recvString = recvString.substring(5);
       planPath();
       //TODO: bool wala stuff k kis ko TRUE karna ha aur kis ko FALSE
     }
@@ -285,7 +291,7 @@ void planPath(){
   int cX,cY;
   int eX,eY;
   int c1=1, c2=1; 
-
+  Serial.println(recvString);
   c1 = recvString.indexOf(',')+1;
   c2 = recvString.indexOf(',',c1);
   cX = recvString.substring(c1,c2).toInt();
@@ -303,7 +309,10 @@ void planPath(){
 
   Astar.Flush();
   Astar.findPath(cX,cY,eX,eY);
-
+  Serial.println("aa");
+  Serial.print(cX);Serial.print(",");Serial.print(cY);Serial.print(",");
+  Serial.print(eX);Serial.print(",");Serial.println(eY);
+  Serial.println(Astar.stepCount());
   followPath = true;
   doneRotate = true;
   doneStraight = true;
@@ -462,7 +471,10 @@ void serial_receive(void){
 
         if(inputString3.startsWith("START")) rotateActive = true;
         else if(inputString3.startsWith("STOP")) rotateActive = false;
-        else if (inputString3.startsWith("STRAIGHT")) doneStraight = true;
+        else if (inputString3.startsWith("STRAIGHT")){ 
+          doneStraight = true;
+          agay = 0;
+        }
         else if (inputString3.startsWith("ROTATE")) doneRotate = true;
         
         stringComplete3 = false;
