@@ -48,7 +48,7 @@ bool stringComplete2 = false;
 #define rightAngle         74
 #define backAngle          350
 #define leftAngle          200
-#define Error              35       //error is changed for ROTATE (please change it for localization)
+#define Error              25       //error is changed for ROTATE (please change it for localization)
 
 float    magneticX, magneticY, magneticZ;
 float    headingAngle;
@@ -101,7 +101,8 @@ void setup(void) {
   Serial.println();
   Serial.println("RF Chat V01.0");
   delay(500);
-
+  nrf_send("Checking");
+  
   initMagnetoMeter();
   
   inputString3.reserve(100);
@@ -159,6 +160,7 @@ if(followPath){
               doneRotate = false;
               doneStraight = false;
               counti = 0;
+              nrf_send("Finished!!");
               agay = 0;
             }
           }
@@ -192,9 +194,23 @@ if (rotateActive){
 //  Serial.println(SetpointHeading);
   }
 }
-  nRF_receive();
-  serial_receive();
   
+  nRF_receive();
+//  serial_receive();
+
+  if(stringComplete3) { 
+    nrf_send(inputString3);
+    interperetMotorSerial();
+    stringComplete3 = false;
+    inputString3 = "";
+  } 
+
+  if(stringComplete2){
+    nrf_send(inputString2);
+    interperetSonarSerial();
+    stringComplete2 = false;
+    inputString2 = "";
+  }
 } // end loop()
 
 /*CUSTOM functions*/
@@ -223,7 +239,13 @@ void serialEvent2() {
 }
 
 void interperetMotorSerial(){
-  
+  if(inputString3.startsWith("START")) rotateActive = true;
+  else if(inputString3.startsWith("STOP")) rotateActive = false;
+  else if (inputString3.startsWith("STRAIGHT")){ 
+    doneStraight = true;
+    agay = 0;
+  }
+  else if (inputString3.startsWith("ROTATE")) doneRotate = true;
 }
 
 void interperetSonarSerial(){
@@ -270,13 +292,19 @@ void nRF_receive(void) {
         Serial3.println(recvString);
       }
     }
-    else if (recvString.startsWith("S")){
-      recvString = "S";
+    else if (recvString.startsWith("SONAR,L")){
+      readData();
+      findHeadingAngle();
+      recvString = "L";
       recvString += ",";
       recvString += orientation; 
       Serial2.println(recvString);
     }
-
+    else if (recvString.startsWith("SONAR,D")){
+      recvString = recvString.substring(5);
+      Serial2.println(recvString);
+    }
+    
     recvString = "";
     RecvPayload[0] = 0;  // Clear the buffers
     for(int i =0; i<=31;i++){
@@ -421,7 +449,12 @@ void makeCommand(){
 }
 
 void sendCommand(){
+  if(command.startsWith("C,X")){
+    doneRotate = true;
+  }
+  else
   Serial3.print(command);
+  
   Serial.print(command);
 }
 
@@ -434,7 +467,7 @@ void sendStraightCommand(){
 void serial_receive(void){
   
   if (stringComplete2) { 
-        // swap TX & Rx addr for writing
+        /*// swap TX & Rx addr for writing
         inputString2.toCharArray(SendPayload,31);
         radio.openWritingPipe(pipes[1]);
         radio.openReadingPipe(0,pipes[0]);  
@@ -446,20 +479,22 @@ void serial_receive(void){
         //Serial.print(inputString2);
         Serial.println(SendPayload);          
         Serial.println();
-        stringComplete2 = false;
-       
+        
         // restore TX & Rx addr for reading  
              
         radio.openWritingPipe(pipes[0]);
         radio.openReadingPipe(1,pipes[1]);
         radio.startListening();
-          
+        */
+
+        nrf_send(inputString2);
+        stringComplete2 = false;  
         inputString2 = "";
   } // endif
 
     if (stringComplete3) { 
         // swap TX & Rx addr for writing
-        
+        /*
         radio.openWritingPipe(pipes[1]);
         radio.openReadingPipe(0,pipes[0]);  
         radio.stopListening();
@@ -468,27 +503,22 @@ void serial_receive(void){
         Serial.print("S:");  
         Serial.print(inputString3);          
         Serial.println();
+        */
 
-        if(inputString3.startsWith("START")) rotateActive = true;
-        else if(inputString3.startsWith("STOP")) rotateActive = false;
-        else if (inputString3.startsWith("STRAIGHT")){ 
-          doneStraight = true;
-          agay = 0;
-        }
-        else if (inputString3.startsWith("ROTATE")) doneRotate = true;
+        nrf_send(inputString3);
+        
+        
         
         stringComplete3 = false;
        
         // restore TX & Rx addr for reading  
-             
+        /*     
         radio.openWritingPipe(pipes[0]);
         radio.openReadingPipe(1,pipes[1]);
         radio.startListening();
-          
+        */  
         inputString3 = "";
   } // endif
-
-  
 } // end serial_receive()
 
 
@@ -556,6 +586,10 @@ void findHeadingAngle(){
    // Convert radians to degrees for readability.
    headingAngle = (heading * 180)/(PI);
 
+   if ((headingAngle >= 0) && (headingAngle <= Error + 10)){
+      headingAngle += 360;  
+   }
+   
    // For Orientation
    if ( (headingAngle <= frontAngle + Error) && (headingAngle >= frontAngle - Error) )
           { orientation = 'N'; 
@@ -586,5 +620,24 @@ void findONLYAngle(){
    
    // Convert radians to degrees for readability.
    headingAngle = (heading * 180)/(PI);
+}
+
+void nrf_send(String input){
+  
+    // swap TX & Rx addr for writing
+    input.toCharArray(SendPayload,31);
+    radio.openWritingPipe(pipes[1]);
+    radio.openReadingPipe(0,pipes[0]);  
+    radio.stopListening();
+   // radio.write(inputString2.c_str(),inputString2.length());
+    radio.write(&SendPayload,strlen(SendPayload));
+
+    Serial.print("nRF Send = ");
+    Serial.println(SendPayload);
+    
+  // restore TX & Rx addr for reading  
+    radio.openWritingPipe(pipes[0]);
+    radio.openReadingPipe(1,pipes[1]);
+    radio.startListening();
 }
 
